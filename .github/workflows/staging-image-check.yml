@@ -1,0 +1,78 @@
+name: Staging image check
+
+# Fork-only check: builds the Passport image from this branch and runs it with staging-like
+# settings. Apple values are placeholders; the server keyring is generated per run.
+on:
+  push:
+    branches:
+      - ci/staging-image-check
+
+permissions:
+  contents: read
+
+jobs:
+  image:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Checkout
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+
+      - name: Build image (linux/amd64)
+        run: docker build --progress=plain -t passport:staging-check .
+
+      - name: Run with Apple off, on, and misconfigured
+        run: |
+          set -euo pipefail
+          key="$(openssl rand -base64 32)"
+          common=(
+            -e GOOGLE_CLIENT_ID=staging-check.apps.googleusercontent.com
+            -e HOMEGATE_URL=https://homegate.staging.pubky.app/
+            -e PUBKY_HOMESERVER_CONNECT_ORIGINS=https://homeserver.staging.pubky.app
+            -e PASSPORT_SERVER_SECRET_CURRENT_KEY_ID=check1
+            -e "PASSPORT_SERVER_SECRET_KEYRING_JSON={\"check1\":\"${key}\"}"
+          )
+          apple=(
+            -e APPLE_LOGIN_ENABLED=true
+            -e APPLE_SERVICES_ID=app.pubky.passport.staging
+            -e APPLE_CLOUDKIT_CONTAINER_ID=iCloud.app.pubky.passport.staging
+            -e APPLE_CLOUDKIT_API_TOKEN=REPLACEWITHTOKENFROMJAMES0000000000
+            -e APPLE_CLOUDKIT_ENVIRONMENT=production
+          )
+          docker run -d --name off -p 3000:3000 "${common[@]}" passport:staging-check
+          docker run -d --name on -p 3001:3000 "${common[@]}" "${apple[@]}" passport:staging-check
+          docker run -d --name live -p 3002:3000 "${common[@]}" "${apple[@]}" -e APPLE_LIVE_CHECK=true passport:staging-check
+          docker run -d --name bad -p 3003:3000 "${common[@]}" -e APPLE_LOGIN_ENABLED=true passport:staging-check
+          for port in 3000 3001 3002 3003; do
+            for i in $(seq 1 60); do curl -s -o /dev/null "http://127.0.0.1:${port}/" && break; sleep 1; done
+          done
+
+          code() { curl -s -o /dev/null -w '%{http_code}' "$@"; }
+          expect() { if [ "$2" = "$3" ]; then echo "ok   $1: $3"; else echo "FAIL $1: expected $2, got $3"; failed=1; fi; }
+          forged=(-H 'content-type: application/json' -d '{"appleIdToken":"a.b.c"}')
+          failed=0
+
+          expect "off /" 200 "$(code http://127.0.0.1:3000/)"
+          expect "off /authorize" 200 "$(code http://127.0.0.1:3000/authorize)"
+          expect "off POST /api/wrapping-key/apple" 404 "$(code "${forged[@]}" http://127.0.0.1:3000/api/wrapping-key/apple)"
+          expect "off /dev/apple-live-check" 404 "$(code http://127.0.0.1:3000/dev/apple-live-check)"
+          expect "off CSP without CloudKit" 0 "$(curl -sI http://127.0.0.1:3000/ | grep -ic 'api.apple-cloudkit.com' || true)"
+
+          expect "on /" 200 "$(code http://127.0.0.1:3001/)"
+          expect "on /authorize" 200 "$(code http://127.0.0.1:3001/authorize)"
+          expect "on POST /api/wrapping-key/apple forged" 401 "$(code "${forged[@]}" http://127.0.0.1:3001/api/wrapping-key/apple)"
+          expect "on /dev/apple-live-check" 404 "$(code http://127.0.0.1:3001/dev/apple-live-check)"
+          expect "on CSP with CloudKit" 1 "$(curl -sI http://127.0.0.1:3001/ | grep -ic 'api.apple-cloudkit.com' || true)"
+
+          expect "live-check /dev/apple-live-check" 200 "$(code http://127.0.0.1:3002/dev/apple-live-check)"
+
+          expect "misconfigured /" 500 "$(code http://127.0.0.1:3003/)"
+          expect "misconfigured log names the variable" 1 "$(docker logs bad 2>&1 | grep -c 'APPLE_SERVICES_ID is required' | head -1 | awk '{print ($1>0)?1:0}')"
+
+          echo "image user: $(docker exec on id -un)"
+          docker image ls passport:staging-check --format 'image size: {{.Size}}'
+          exit "$failed"
+
+      - name: Container logs
+        if: always()
+        run: for c in off on live bad; do echo "== $c"; docker logs "$c" 2>&1 | tail -20; done
