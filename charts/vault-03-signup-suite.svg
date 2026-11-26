@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1136 516" width="1136" height="516" font-family="DejaVu Sans, Verdana, sans-serif">
+<defs><marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#444"/></marker><marker id="ag" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#2E9A50"/></marker></defs>
+<rect width="1136" height="516" fill="#FFFFFF"/>
+<text x="70" y="62" font-size="30" font-weight="bold" fill="#111">Sign up from a suite app: only the name changes</text>
+<text x="70" y="98" font-size="18" fill="#555">The Dashboard (today&#x27;s Pubky Accounts) sends the pop-up to the key vault and gets the parent</text>
+<text x="70" y="122" font-size="18" fill="#555">grant back.</text>
+<path d="M306,203 L450,203" fill="none" stroke="#444" stroke-width="2.4" marker-end="url(#ar)"/>
+<path d="M686,203 L830,203" fill="none" stroke="#444" stroke-width="2.4" marker-end="url(#ar)"/>
+<path d="M948,246 L948,320" fill="none" stroke="#444" stroke-width="2.4" marker-end="url(#ar)"/>
+<path d="M830,363 L686,363" fill="none" stroke="#2E9A50" stroke-width="2.4" stroke-dasharray="8 6" marker-end="url(#ag)"/>
+<path d="M450,363 L306,363" fill="none" stroke="#2E9A50" stroke-width="2.4" stroke-dasharray="8 6" marker-end="url(#ag)"/>
+<rect x="70" y="160" width="236" height="86" rx="14" fill="#F1F2F4" stroke="#8A9099" stroke-width="2.4"/>
+<text x="188" y="198" font-size="18" font-weight="bold" fill="#333A44" text-anchor="middle">Suite app</text>
+<text x="188" y="220" font-size="15.5" fill="#333A44" text-anchor="middle">Log in</text>
+<rect x="450" y="160" width="236" height="86" rx="14" fill="#FFF3E6" stroke="#F0A040" stroke-width="2.4"/>
+<text x="568" y="198" font-size="18" font-weight="bold" fill="#7A4A0C" text-anchor="middle">Dashboard</text>
+<text x="568" y="220" font-size="15.5" fill="#7A4A0C" text-anchor="middle">not signed in yet</text>
+<rect x="830" y="160" width="236" height="86" rx="14" fill="#EAF7EE" stroke="#3FAE63" stroke-width="2.4"/>
+<text x="948" y="188" font-size="18" font-weight="bold" fill="#185C2E" text-anchor="middle">Key vault</text>
+<text x="948" y="209" font-size="15.5" fill="#185C2E" text-anchor="middle">sign in or create,</text>
+<text x="948" y="230" font-size="15.5" fill="#185C2E" text-anchor="middle">profile</text>
+<rect x="830" y="320" width="236" height="86" rx="14" fill="#EAF7EE" stroke="#3FAE63" stroke-width="2.4"/>
+<text x="948" y="358" font-size="18" font-weight="bold" fill="#185C2E" text-anchor="middle">Key vault</text>
+<text x="948" y="380" font-size="15.5" fill="#185C2E" text-anchor="middle">Authorize the Dashboard</text>
+<rect x="450" y="320" width="236" height="86" rx="14" fill="#FFF3E6" stroke="#F0A040" stroke-width="2.4"/>
+<text x="568" y="348" font-size="18" font-weight="bold" fill="#7A4A0C" text-anchor="middle">Dashboard</text>
+<text x="568" y="369" font-size="15.5" fill="#7A4A0C" text-anchor="middle">parent grant, child</text>
+<text x="568" y="390" font-size="15.5" fill="#7A4A0C" text-anchor="middle">grant</text>
+<rect x="70" y="320" width="236" height="86" rx="14" fill="#F1F2F4" stroke="#8A9099" stroke-width="2.4"/>
+<text x="188" y="358" font-size="18" font-weight="bold" fill="#333A44" text-anchor="middle">Suite app</text>
+<text x="188" y="380" font-size="15.5" fill="#333A44" text-anchor="middle">signed in</text>
+<rect x="347" y="172" width="61" height="25" rx="6" fill="#FFFFFF" opacity="0.92"/>
+<text x="378" y="190" font-size="14.5" fill="#444" text-anchor="middle">pop-up</text>
+<rect x="719" y="172" width="78" height="25" rx="6" fill="#FFFFFF" opacity="0.92"/>
+<text x="758" y="190" font-size="14.5" fill="#444" text-anchor="middle">redirect</text>
+<rect x="703" y="369" width="110" height="25" rx="6" fill="#FFFFFF" opacity="0.92"/>
+<text x="758" y="387" font-size="14.5" fill="#2E9A50" text-anchor="middle">parent grant</text>
+<rect x="327" y="369" width="102" height="25" rx="6" fill="#FFFFFF" opacity="0.92"/>
+<text x="378" y="387" font-size="14.5" fill="#2E9A50" text-anchor="middle">child grant</text>
+<rect x="70" y="460" width="22" height="22" rx="5" fill="#F1F2F4" stroke="#8A9099" stroke-width="2"/>
+<text x="100" y="477" font-size="16" fill="#444">App</text>
+<rect x="154.5" y="460" width="22" height="22" rx="5" fill="#FFF3E6" stroke="#F0A040" stroke-width="2"/>
+<text x="184.5" y="477" font-size="16" fill="#444">Dashboard</text>
+<rect x="296.0" y="460" width="22" height="22" rx="5" fill="#EAF7EE" stroke="#3FAE63" stroke-width="2"/>
+<text x="326.0" y="477" font-size="16" fill="#444">Key vault</text>
+<path d="M451.5,471 L495.5,471" stroke="#444" stroke-width="2.4" marker-end="url(#ar)"/>
+<text x="505.5" y="477" font-size="16" fill="#444">request</text>
+<path d="M595.5,471 L639.5,471" stroke="#2E9A50" stroke-width="2.4" stroke-dasharray="8 6" marker-end="url(#ag)"/>
+<text x="649.5" y="477" font-size="16" fill="#444">result comes back</text>
+</svg>

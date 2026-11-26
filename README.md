@@ -4,7 +4,7 @@ Draft for review. Nothing here is built.
 
 Goal: rename the products to **Pubky Dashboard** (`dashboard.pubky.app`, today's Pubky Accounts: parent grant, suite apps) and **Pubky Accounts** (`accounts.pubky.app`, today's Passport codebase). The key sits in a separate key store, and nothing outside that store, including profile, files, homeserver tools and most screens, can read it.
 
-![Origins](diagram.png)
+![Who holds what](charts/vault-01-overview.png)
 
 ## Can the key store share a domain with Accounts?
 
@@ -61,8 +61,6 @@ The whole sign-in and sign-up pop-up stays on the vault, exactly as Passport tod
 
 ## Same screens? What exactly is different
 
-![Where each step runs](flows.png)
-
 Every screen keeps its design; only the address bar shows which host renders it. Vault screens carry a small "key vault" tag in the mockups. Whether to show one in the product is up to design.
 
 - **Sign-in and sign-up pop-up:** no change, still `passport.pubky.app`.
@@ -76,17 +74,25 @@ Mockups (draft, not live):
 
 **Sign up from an external app**, no change:
 
+![](charts/vault-02-signup-external.png)
+
 ![](gif/signup-ext.gif)
 
 **Sign up from a suite app**, through the Dashboard:
+
+![](charts/vault-03-signup-suite.png)
 
 ![](gif/signup-suite.gif)
 
 **Edit profile from an app**, on Accounts, with access from the vault:
 
+![](charts/vault-04-edit-profile.png)
+
 ![](gif/edit.gif)
 
-**Move homeserver**, Accounts → vault confirm → Accounts:
+**Move homeserver**, Accounts → vault confirm → Accounts. The same pattern covers Mirror, the recovery phrase, move to Ring, attach and remove:
+
+![](charts/vault-05-key-actions.png)
 
 ![](gif/move.gif)
 
