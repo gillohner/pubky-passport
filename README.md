@@ -45,20 +45,54 @@ If you'd rather show `vault.accounts.pubky.app`, the extra work is listed under 
 **Pubky Accounts** (`accounts.pubky.app`): everything else.
 
 - Your pubkys, from the bridge: public keys, labels and backup status only.
-- Profile, files, homeserver usage, authorized apps.
-- Onboarding steps that need no key: pick a Homegate, verify by SMS or Lightning, the profile step.
+- Profile editing, files, homeserver usage, authorized apps: everything that shows data from the homeserver.
+- Move and Mirror up to the key step: pick a homeserver and pay its Homegate.
 - Its own homeserver session: a grant for client id `accounts.pubky.app` with `/pub/:rw,/priv/:rw`. This is the same cap an Accounts child grant has. The vault signs it (see "Signing policy").
 
 **Pubky Dashboard** (`dashboard.pubky.app`): today's Pubky Accounts repo, renamed. It redirects to the vault for sign-in and the parent grant approval, as in RFC 0001 A.1. No change to its code beyond the address.
 
 ## Sign-in and sign-up, step by step
 
-The pop-up, or the tab when a pop-up can't open, moves between hosts by redirect. Clicks are the same as the "B" mockups.
+The whole sign-in and sign-up pop-up stays on the vault, exactly as Passport today: sign-in, Create, Homegate and verify (SMS, Lightning, Google, Apple), key, backup, the profile step and Authorize. The profile step only writes what you type, and for `profile=required` it only checks that `profile.json` exists, so the vault never shows data other apps wrote.
 
-- **External app:** pop-up → vault `/authorize` → sign in → vault review → Authorize → back to the app.
-- **Suite app:** pop-up → Dashboard → vault `/authorize` → sign in → vault review of the parent grant → Dashboard → app.
-- **Sign-up:** vault `/authorize` → Create a pubky → Accounts `/create`, where you pick a Homegate and verify by SMS or Lightning → back to the vault with the sign-up code → key, sign-up, backup → Accounts `/welcome` for the profile step, using its grant → vault review → app.
-- **Sign-up with Google or Apple:** today one ID token is sent both to Homegate for the sign-up code and to the server for the wrapping key, so this verification happens on the vault, not on Accounts.
+- **External app:** pop-up → vault for every screen → back to the app. No change from today.
+- **Suite app:** pop-up → Dashboard → vault → Dashboard → app. Only the name changes.
+- **Google or Apple sign-up:** today one ID token is sent both to Homegate for the sign-up code and to the server for the wrapping key (`GoogleIdentityLifecycle.ts:314-355`). That's one more reason this step stays on the vault.
+
+## Same screens? What exactly is different
+
+![Where each step runs](flows.png)
+
+Every screen keeps its design; only the address bar shows which host renders it. Vault screens carry a small "key vault" tag in the mockups. Whether to show one in the product is up to design.
+
+- **Sign-in and sign-up pop-up:** no change, still `passport.pubky.app`.
+- **Suite apps:** Dashboard instead of Pubky Accounts; the name only.
+- **Profile, files, homeserver tools:** open on `accounts.pubky.app` instead of `passport.pubky.app`. Same screens, same clicks.
+- **First visit to Accounts in a browser:** a short "Connecting to your key vault…" while the bridge signs Accounts' access. No click if the vault has the key here. With the key in Ring, you sign in through the vault as usual.
+- **Key actions started in Accounts** (Move, Mirror, show the recovery phrase, move to Ring, attach Google or Apple, remove an identity): the tab switches to `passport.pubky.app` for one confirm screen, then comes back. Move gets one extra click (the confirm), 4 instead of 3. Showing the phrase gets none.
+- **Branding:** the screens say Pubky Accounts while the pop-up address says `passport.pubky.app`. Moving the vault to `vault.accounts.pubky.app` fixes that, at the cost listed below.
+
+Mockups (draft, not live):
+
+**Sign up from an external app**, no change:
+
+![](gif/signup-ext.gif)
+
+**Sign up from a suite app**, through the Dashboard:
+
+![](gif/signup-suite.gif)
+
+**Edit profile from an app**, on Accounts, with access from the vault:
+
+![](gif/edit.gif)
+
+**Move homeserver**, Accounts → vault confirm → Accounts:
+
+![](gif/move.gif)
+
+**Show the recovery phrase**, only the vault renders it:
+
+![](gif/export.gif)
 
 ## Signing policy (in the vault, not in Accounts)
 
@@ -84,7 +118,21 @@ What isolation then buys: a bug or bad dependency on Accounts gets at most `/pub
 - `grants.revoke(grantId)` needs no confirm: at worst an attacker signs you out of apps.
 - `confirm.start(op, params)` returns the vault URL to send the browser to; `confirm.result(id)` reads the outcome after the redirect back.
 
-Iframe storage: browsers split a framed site's storage by the top site, but `accounts.pubky.app` and `passport.pubky.app` are the same site, so the bridge sees the vault's normal storage. To verify on staging in Chrome, Firefox and Safari.
+### Does the bridge hit the old iframe problems?
+
+No. The problems we listed for embedding Passport came from framing it inside *other* sites:
+
+- **Storage split by top site.** Chrome, Firefox and Safari give a framed site separate storage for each top site it's framed under, so a Passport frame on example.com would start empty. The bridge is only framed by `accounts.pubky.app`. `accounts.pubky.app` and `passport.pubky.app` count as the same site, because `pubky.app` is not on the Public Suffix List (only `app` is; checked). So the bridge reads the vault's normal storage.
+- **Google and Apple inside a frame.** The bridge never signs in to Google or Apple. Those pop-ups only open from full vault pages, as today.
+- **Clickjacking.** The bridge has no buttons. Every click that signs runs on a full vault page that can't be framed.
+
+What could still split the bridge's storage, and the guards for it:
+
+- **Accounts framed by another site.** That gives the bridge a cross-site parent, and Chrome then splits its storage. Guard: `frame-ancestors 'none'` on every Accounts page.
+- **Strict privacy modes or extensions** that block or wipe frame storage. Guard: when the bridge answers "no identities" but Accounts had one before, Accounts redirects once to the vault (top-level, no click) and back.
+- **Still to test on staging:** Chrome, Firefox, Safari, plus Safari's private mode and Brave.
+
+If we want no frame at all: Accounts gets its access and the identity list from one redirect through the vault on first visit. It then asks for usage and the authorized apps the same way, which means more page switches.
 
 ## Codebase
 
@@ -98,9 +146,8 @@ src/
                   authorization/approve, signup with code
     ui/           vault screens
     bridge/       bridge server + signing policy
-  accounts/       profile, files, homeserver tools, identities overview,
-                  Homegate SMS/Lightning steps
-  shared/         vault-protocol schemas, UI kit, logger, Result
+  accounts/       profile editing, files, homeserver tools, identities overview
+  shared/         vault-protocol schemas, UI kit, Homegate client, logger, Result
   server/         wrapping-key routes (vault host only)
   app/(vault)/    routes served on the vault host
   app/(accounts)/ routes served on the accounts host
@@ -118,7 +165,17 @@ Guards, so the split holds after refactors:
   - CSP per host: vault `connect-src` lists only the homeservers, relays, Homegate, Google/Apple and Drive/CloudKit endpoints; `frame-ancestors` is `'none'` except the bridge
 - e2e: after sign-in, no `pubky-passport/local-identities` key exists on the accounts origin, and Accounts' session caps are `/pub/:rw,/priv/:rw`.
 
-Running it: env `VAULT_ORIGIN` and `ACCOUNTS_ORIGIN`. Locally that's two ports, for example `localhost:3000` and `localhost:3001`; different ports are different origins, so dev has the same isolation. Self-hosters run one image on two subdomains.
+## Self-hosting and decentralization
+
+Still easy. It costs one more hostname, nothing else.
+
+- **Run it:** the same Docker image with two env vars, `VAULT_ORIGIN` and `ACCOUNTS_ORIGIN`, plus two DNS names and TLS for both (one wildcard certificate covers them). Locally that's two ports, for example `localhost:3000` and `localhost:3001`. Different ports are different origins, so dev has the same isolation.
+- **Google and Apple:** register only the vault host, as you register the Passport host today. Self-hosters without SSO skip this.
+- **One-host mode:** if `ACCOUNTS_ORIGIN` equals `VAULT_ORIGIN`, everything runs on one host, as Passport does today, without the isolation. That's fine for dev or a personal instance, and the docs say what it gives up.
+- **Apps:** the SDK keeps one setting, `instance` (the vault address, default `passport.pubky.app`). Apps never need to know the Accounts address: each vault redirects to its own paired Accounts host from config, and the bridge only accepts that origin.
+- **Homegate and homeserver choice:** unchanged. Any vault can sign up through any Homegate, or straight on a homeserver with an invite code.
+- **What stays tied to an instance:** an SSO backup still opens only through the vault that made its backup key, the same as today. Recovery phrase, recovery file and Mobile Signer work on any instance.
+- **Harder than today:** one more hostname to run. The vault's CSP and bridge have to name the paired Accounts origin, read from env.
 
 ## Order of work
 
